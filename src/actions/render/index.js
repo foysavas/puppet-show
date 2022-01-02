@@ -48,8 +48,19 @@ async function getPngWithPuppet({ url, puppetShowParams }) {
       }
     }
   }
-
-  const browser = await puppeteer.launch();
+  const puppeteerOpts = {
+    headless: !process.env.APP_RENDER_WITH_HEAD || false,
+    devtools: process.env.APP_RENDER_WITH_HEAD || false,
+    // defaultViewport: null,
+    args: [
+      "--no-sandbox",
+      "--disable-web-security",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
+    timeout: process.env.APP_RENDER_TIMEOUT,
+  };
+  const browser = await puppeteer.launch(puppeteerOpts);
   const page = await browser.newPage();
   if (LOG_BROWSER_CONSOLE) {
     page.on("console", (msg) => {
