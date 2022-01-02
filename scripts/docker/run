@@ -1,0 +1,5 @@
+#!/bin/bash
+. `dirname $0`/vars
+set -x
+
+docker run -p $APP_PORT:$APP_PORT --rm --net=$APP_DOCKER_NET -e "REDIS_URL=$REDIS_URL" -e "SQL_DB_URL=$SQL_DB_URL" -it $CONTAINER_NAME

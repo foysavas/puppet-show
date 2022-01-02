@@ -1,0 +1,5 @@
+#!/bin/bash
+. `dirname $0`/vars
+set -x
+
+docker run --rm -e "REDIS_URL=$REDIS_URL" -e "SQL_DB_URL=$SQL_DB_URL-test" --net=$APP_DOCKER_HOST -it $CONTAINER_NAME npm run test

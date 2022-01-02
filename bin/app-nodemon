@@ -1,0 +1,3 @@
+#!/bin/sh
+
+nodemon -w ./src --async-stack-traces --harmony -r esm-wallaby -r ./init.js "$@"

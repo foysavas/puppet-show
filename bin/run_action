@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+if [ $# -eq 0 ]; then
+  (cd $DIR/../src/actions && tree .)
+  exit 1
+fi
+
+all_args=("$@")
+action=$1
+rest_args=("${all_args[@]:1}")
+
+$DIR/app-node "$DIR/../src/action" --action "$action" "${rest_args[@]}"

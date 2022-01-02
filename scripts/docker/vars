@@ -1,0 +1,6 @@
+#!/bin/bash
+CONTAINER_NAME="puppet-show"
+APP_DOCKER_HOST_IP=`ifconfig | grep "inet " | grep -Fv 127.0.0.1 | grep -Fv 127.0.0.1 | awk '{print $2}' | cut -d ':' -f 2 | cut -d ' ' -f 1 | awk 'FNR == 1'`
+APP_DOCKER_HOST_USER=`whoami`
+[[ -n $APP_DOCKER_NET ]] || APP_DOCKER_NET="bridge"
+[[ -n $APP_PORT ]] || APP_PORT="2000"
