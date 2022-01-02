@@ -3,18 +3,18 @@ import _ from "lodash";
 import puppeteer from "puppeteer";
 import sha256 from "crypto-js/sha256";
 import fs from "fs-extra";
-import checkDiskSpace from "check-disk-space";
 
-const BASE_URL = "http://localhost:3000";
-const LOG_BROWSER_LOGS = false;
+const BASE_URL = process.env.APP_BASE_URL;
+const LOG_BROWSER_CONSOLE = process.env.APP_LOG_BROWSER_CONSOLE;
 
-const WAIT_FOR_TIME = 500;
-const WAIT_FOR_SELECTOR = null;
-const WAIT_FOR_SELECTOR_MISSING = null;
-const CLIP_SELECTOR = null;
-const USE_FILE_CACHE = true;
-const FILE_CACHE_TTL = 0;
-const TMP_DIR = "./tmp";
+const WAIT_FOR_TIME = process.env.APP_WAIT_FOR_TIME;
+const WAIT_FOR_SELECTOR = process.env.APP_WAIT_FOR_SELECTOR;
+const WAIT_FOR_SELECTOR_MISSING = process.env.APP_WAIT_FOR_SELECTOR_MISSING;
+const CLIP_SELECTOR = process.env.APP_CLIP_SELECTOR;
+const USE_FILE_CACHE = process.env.APP_USE_FILE_CACHE;
+const FILE_CACHE_TTL = process.env.APP_FILE_CACHE_TTL;
+const TMP_DIR = process.env.APP_TMP_DIR;
+const REDIRECT_WITHOUT_SELECTOR = process.env.APP_REDIRECT_WITHOUT_SELECTOR;
 
 function parseParams({ pathname, query }) {
   const queryParamsMixed = qs.parse(query);
@@ -51,7 +51,7 @@ async function getPngWithPuppet({ url, puppetShowParams }) {
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  if (LOG_BROWSER_LOGS) {
+  if (LOG_BROWSER_CONSOLE) {
     page.on("console", (msg) => {
       for (let i = 0; i < msg.args().length; ++i)
         console.log(`PUPPETEER: ${msg.args()[i]}`);
@@ -67,7 +67,7 @@ async function getPngWithPuppet({ url, puppetShowParams }) {
     WAIT_FOR_SELECTOR_MISSING;
   const clipSelector =
     puppetShowParams.PUPPET_SHOW_CLIP_SELECTOR ?? CLIP_SELECTOR;
-  console.log({ puppetShowParams });
+  const redirectWithoutSelector = REDIRECT_WITHOUT_SELECTOR;
 
   try {
     await page.goto(url, { waitUntil: "domcontentloaded" });
@@ -89,10 +89,22 @@ async function getPngWithPuppet({ url, puppetShowParams }) {
         waitForSelectorMissing
       );
     }
+    if (redirectWithoutSelector) {
+      const found = await page.evaluate((selector) => {
+        return !!document.querySelector(selector);
+      }, redirectWithoutSelector);
+      if (!found) {
+        return { redirect: url };
+      }
+    }
     if (clipSelector) {
       clip = await page.evaluate((selector) => {
-        const rect = document.querySelector(selector).getBoundingClientRect();
-        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        const rect = document.querySelector(selector)?.getBoundingClientRect();
+        if (rect) {
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        } else {
+          return null;
+        }
       }, clipSelector);
     }
   } catch (err) {
@@ -122,5 +134,6 @@ export default async function render({ pathname, query }) {
     pathname,
     query,
   });
+
   return getPngWithPuppet({ url, puppetShowParams });
 }

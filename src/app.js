@@ -4,7 +4,7 @@ import cors from "cors";
 import pinoLogger from "express-pino-logger";
 import render from "./actions/render/index";
 import parseurl from "parseurl";
-import path from 'path';
+import path from "path";
 
 export const createBaseApp = function () {
   const app = express();
@@ -46,13 +46,25 @@ export const createApp = function () {
   app.get("/favicon.ico", (req, res) => res.status(204));
   app.get("*", async function (req, res) {
     const parsedUrl = parseurl(req);
-    const r = await render({ pathname: parsedUrl.pathname, query: parsedUrl.query });
+    const r = await render({
+      pathname: parsedUrl.pathname,
+      query: parsedUrl.query,
+    });
     if (r) {
-      res.contentType('image/png');
+      if (r.redirect) {
+        return res.redirect(r.redirect);
+      } 
+      res.contentType("image/png");
       if (r.img) {
         res.send(r.img);
       } else if (r.file) {
-        res.sendFile(path.resolve(r.file))
+        res.sendFile(path.resolve(r.file));
+      }
+    } else {
+      if (process.env.APP_REDIRECT_MISSING_TO) {
+        res.redirect(process.env.APP_REDIRECT_MISSING_TO);
+      } else {
+        res.sendStatus(404);
       }
     }
   });
