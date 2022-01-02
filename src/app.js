@@ -43,7 +43,9 @@ export const createBaseApp = function () {
 
 export const createApp = function () {
   const app = createBaseApp();
-  app.get("/favicon.ico", (req, res) => res.status(204));
+  app.get("/favicon.ico", (req, res) =>
+    res.redirect(`${process.env.APP_BASE_URL}/favicon.ico`)
+  );
   app.get("*", async function (req, res) {
     const parsedUrl = parseurl(req);
     const r = await render({
@@ -53,7 +55,7 @@ export const createApp = function () {
     if (r) {
       if (r.redirect) {
         return res.redirect(r.redirect);
-      } 
+      }
       res.contentType("image/png");
       if (r.img) {
         res.send(r.img);
